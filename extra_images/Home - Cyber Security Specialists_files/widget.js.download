@@ -1,0 +1,120 @@
+window.ClOUDT = window.ClOUDT || {
+    "loaded": false
+};
+window.ClOUDT.Init = function() {
+    function setpxperCloudTango(p) {
+        var q = /(px|\%)/i;
+        var r = "";
+        if (p && p.length > 0) {
+            if (q.test(p)) {
+                r = p;
+            } else {
+                r = p + "px";
+            }
+        }
+        return r;
+    }
+
+    function ajaxHandler() {
+        if (this.status == 200) {
+            var companyInfo = JSON.parse(this.responseText);
+            companyInfo.url = document.location.href;
+            var json_ld_element = document.createElement("script");
+            json_ld_element.setAttribute("type", "application/ld+json");
+            json_ld_element.innerHTML = JSON.stringify(companyInfo);
+            document.head.appendChild(document.createComment("Added by Cloudtango.org"));
+            document.head.appendChild(json_ld_element);
+            document.head.appendChild(document.createComment("/Cloudtango.org"));
+        } else {
+            console.log('Error ' + this.status + ': ' + this.statusText);
+        }
+    }
+
+
+
+    function loadWidgetCloudTango(p) {
+        this.id = Math.random();
+        this.container = p;
+        var baseUrl = this.container.getAttribute("data-url"),
+            company_id = this.container.getAttribute("data-company-id"),
+            widget_type = this.container.getAttribute("data-widget-type"),
+            widget_token = this.container.getAttribute("data-token"),
+            domain_name = this.container.getAttribute("data-company-domain"),
+            if_width = setpxperCloudTango(this.container.getAttribute("data-width")),
+            if_height = setpxperCloudTango(this.container.getAttribute("data-height"));
+        var h = document.createElement("iframe");
+
+        //baseUrl = 'http://www.cloudtango.antaviana.net';
+
+        h.setAttribute("id", "iframe-" + this.id);
+        h.allowTransparency = true;
+        h.frameBorder = 0;
+        h.width = '100%';
+        if (if_height == 'autopx') {
+            h.height = 'auto';
+        } else {
+            h.height = if_height;
+        }
+        h.scrolling = "no";
+        h.onload = function() {
+            h.style.display = "block";
+        };
+        var qs_params = '?ref_domain=' + window.location.hostname;
+        if (company_id) {
+            qs_params += '&uid=' + company_id;
+        }
+        if (widget_token) {
+            qs_params += '&token=' + widget_token;
+        }
+        if (domain_name) {
+            qs_params += '&domain=' + domain_name;
+        }
+        qs_params += '&utm_source=cloudtango&utm_medium=' + window.location.hostname +'&utm_campaign=widget&utm_term=' + widget_token + '&utm_content=' + company_id;
+        h.src = baseUrl + '/widget/widgets/get/' + widget_type + qs_params;
+
+        this.container.appendChild(h);
+        var if_expand = this.container.getAttribute("data-expandifr");
+        if (if_expand == 'true') {
+            setTimeout(function() {
+                iFrameResize({
+                    log: false,
+                    checkOrigin: false,
+                    heightCalculationMethod: 'max'
+                }, h)
+            }, 2000);
+        }
+    }
+    var containers = null;
+    if (document.getElementsByClassName) {
+        containers = document.getElementsByClassName("cloudtango-widget");
+    } else {
+        if (document.querySelectorAll) {
+            containers = document.querySelectorAll(".cloudtango-widget");
+        } else {
+            var q = [],
+                t = new RegExp("(^| )cloudtango-widget( |$)"),
+                p = document.body.getElementsByTagName("*");
+            for (var r = 0, s = p.length; r < s; r++) {
+                if (t.test(p[r].className)) {
+                    q.push(p[r]);
+                }
+            }
+            containers = q;
+        }
+    }
+    if (!containers || containers.length < 1) {
+        return undefined;
+    }
+    var l = containers.length;
+    for (var i = 0; i < l; i++) {
+        var div = containers[i];
+        if (!div.querySelector('iframe')) {
+            new loadWidgetCloudTango(div);
+        }
+    }
+}
+document.addEventListener('readystatechange', function(event) {
+    if (event.target.readyState !== "loading" && window.ClOUDT.loaded === false) {
+        window.ClOUDT.Init();
+    }
+});
